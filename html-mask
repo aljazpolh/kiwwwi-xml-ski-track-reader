@@ -1,148 +1,141 @@
-    <?php
-    /**
-     * Operations of the plugin are included here. 
-     *
-     * @since 1.0
-     */
+<?php
+/**
+ * Operations of the plugin are included here. 
+ *
+ * @since 1.0
+ */
 
-    // Exit if accessed directly
-    if ( ! defined( 'ABSPATH' ) ) exit;
-  
-    // Register the shortcode
-    add_shortcode('ski_track_reader', 'ski_track_xml_display');
+// Exit if accessed directly
+if (!defined('ABSPATH')) exit;
 
+// Define a function to fetch and display all ski track information
+function ski_track_xml_display($url) {
+    if (!$url) {
+        return "Enter XML URL";
+    }
+    $output = "";
 
-    // Define a function to fetch and display all ski track information
-    function ski_track_xml_display($url) {
-        //$url = 'https://snezni-telefon.si/cm/script_xml_resort_load.php?sid=c457d8eaea35eb48318e6db818395491';
+    // Initialize cURL session
+    $ch = curl_init($url);
 
-        if (!$url) {
-            return __("Enter XML URL", "kiwwwi-xml-ski-track-reader");
-        }
-        $output = "";
-        // Initialize cURL session
-        $ch = curl_init($url);
-        
-        // Set cURL options
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        
-        // Execute cURL session and fetch XML content
-        $xmlContent = curl_exec($ch);
-        
-        // Check for cURL errors
-        if (curl_errno($ch)) {
-            die(__("cURL Error: ", "kiwwwi-xml-ski-track-reader") . curl_error($ch));
-        }
-        
-        // Close cURL session
-        curl_close($ch);
-        
-        // Check if the XML content is retrieved successfully
-        if ($xmlContent === false) {
-            die(__("Failed to retrieve XML content.", "kiwwwi-xml-ski-track-reader"));
-        }
-        
-        // Parse XML content using SimpleXML
-        $xml = simplexml_load_string($xmlContent);
-        
-        // Check if the XML is successfully parsed
-        if ($xml === false) {
-            die(__("Failed to parse XML.", "kiwwwi-xml-ski-track-reader"));
-        }
-        
+    // Set cURL options
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    // Execute cURL session and fetch XML content
+    $xmlContent = curl_exec($ch);
+
+    // Check for cURL errors
+    if (curl_errno($ch)) {
+        die("cURL Error: " . curl_error($ch));
+    }
+
+    // Close cURL session
+    curl_close($ch);
+
+    // Check if the XML content is retrieved successfully
+    if ($xmlContent === false) {
+        die("Failed to retrieve XML content.");
+    }
+
+    // Parse XML content using SimpleXML
+    $xml = simplexml_load_string($xmlContent);
+
+    // Check if the XML is successfully parsed
+    if ($xml === false) {
+        die("Failed to parse XML.");
+    }
+
     // Start building the output HTML
-    $output .= '<h2>' . esc_html($xml->Center) . '</h2>';
-     
-    
+    $output .= '<h2>' . htmlspecialchars($xml->Center) . '</h2>';
 
     $output .= '<div class="ski-track-xml-wrapper">';
 
-        $output .= '<div class="ski-track-data">'; 
-            $output .= '<h3>' . __("Informacije", "kiwwwi-xml-ski-track-reader") . '</h3>';
+    $output .= '<div class="ski-track-data">';
+    $output .= '<h3>Informacije</h3>';
 
-             // Display general information
-             if( strlen($xml->Podatki->Obratovanje->Zacetek_obratovanja) > 1 && strlen($xml->Podatki->Obratovanje->Konec_obratovanja) > 1 ):
-                $output .= '<p><b>' . __("Delovni čas:", "kiwwwi-xml-ski-track-reader") . '</b> ' . esc_html($xml->Podatki->Obratovanje->Zacetek_obratovanja) . " - ". esc_html($xml->Podatki->Obratovanje->Konec_obratovanja) . '</p>';
-            endif;
-            if( strlen($xml->Podatki->Obratovanje->Zacetek_obratovanja_nocna) > 1 && strlen($xml->Podatki->Obratovanje->Konec_obratovanja_nocna) > 1 ):
-                $output .= '<p><b>' . __("Delovni čas nočna:", "kiwwwi-xml-ski-track-reader") . '</b> ' . esc_html($xml->Podatki->Obratovanje->Zacetek_obratovanja_nocna) . " - ". esc_html($xml->Podatki->Obratovanje->Konec_obratovanja_nocna) . '</p>';
-            endif;
-            $output .= '<p><b>' . __("Cena:", "kiwwwi-xml-ski-track-reader") . "</b> " . esc_html($xml->Podatki->Obratovanje->Placljivost) . ' €</p>';
-            $output .= '<p>' . esc_html($xml->Podatki->Obratovanje->Obvestilo) . '</p>';
-                
-            $output .= '<p><b>' . __("Last Update:", "kiwwwi-xml-ski-track-reader") . '</b> ' . esc_html($xml->Zadnja_posodobitev) . '</p>';
+    // Display general information
+    if (strlen($xml->Podatki->Obratovanje->Zacetek_obratovanja) > 1 && strlen($xml->Podatki->Obratovanje->Konec_obratovanja) > 1) {
+        $output .= '<p><b>Delovni čas:</b> ' . htmlspecialchars($xml->Podatki->Obratovanje->Zacetek_obratovanja) . " - " . htmlspecialchars($xml->Podatki->Obratovanje->Konec_obratovanja) . '</p>';
+    }
+    if (strlen($xml->Podatki->Obratovanje->Zacetek_obratovanja_nocna) > 1 && strlen($xml->Podatki->Obratovanje->Konec_obratovanja_nocna) > 1) {
+        $output .= '<p><b>Delovni čas nočna:</b> ' . htmlspecialchars($xml->Podatki->Obratovanje->Zacetek_obratovanja_nocna) . " - " . htmlspecialchars($xml->Podatki->Obratovanje->Konec_obratovanja_nocna) . '</p>';
+    }
+    $output .= '<p><b>Cena:</b> ' . htmlspecialchars($xml->Podatki->Obratovanje->Placljivost) . ' €</p>';
+    $output .= '<p>' . htmlspecialchars($xml->Podatki->Obratovanje->Obvestilo) . '</p>';
 
-        $output .= '</div>';
+    $output .= '<p><b>Last Update:</b> ' . htmlspecialchars($xml->Zadnja_posodobitev) . '</p>';
 
-        $output .= '<div class="ski-track-data">'; 
-            $output .= '<h3>' . __("Vremenske razmere", "kiwwwi-xml-ski-track-reader") . '</h3>';
-            if( strlen($xml->Podatki->Vremenske_razmere->Temperatura) > 1 ):
-                $output .= '<p><b>' . __("Temperatura:", "kiwwwi-xml-ski-track-reader") . '</b> ' . esc_html($xml->Podatki->Vremenske_razmere->Temperatura) . '°C</p>';
-            endif;
-            if( strlen($xml->Podatki->Vremenske_razmere->Vreme) > 1 ):
-                $output .= '<p><b>' . __("Vreme:", "kiwwwi-xml-ski-track-reader") . '</b> ' . esc_html($xml->Podatki->Vremenske_razmere->Vreme) . '</p>';
-            endif;
-            if( strlen($xml->Podatki->Vremenske_razmere->Padavine) > 1 ):
-                $output .= '<p><b>' . __("Padavine:", "kiwwwi-xml-ski-track-reader") . '</b> ' . esc_html($xml->Podatki->Vremenske_razmere->Padavine) . '</p>';
-            endif;
-            if( strlen($xml->Podatki->Vremenske_razmere->Veter) > 1 ):
-                $output .= '<p><b>' . __("Veter:", "kiwwwi-xml-ski-track-reader") . '</b> ' . esc_html($xml->Podatki->Vremenske_razmere->Veter) . '</p>';
-            endif;
-            if( strlen($xml->Podatki->Vremenske_razmere->Megla) > 1 ):
-                $output .= '<p><b>' . __("Megla:", "kiwwwi-xml-ski-track-reader") . '</b> ' . esc_html($xml->Podatki->Vremenske_razmere->Megla) . '</p>';    
-            endif;
-        $output .= '</div>';
+    $output .= '</div>';
 
-        $output .= '<div class="ski-track-data">';
-            $output .= '<h3>' . __("Snežne razmere", "kiwwwi-xml-ski-track-reader") . '</h3>';
-            $output .= '<p><b>' . __("Podlaga:", "kiwwwi-xml-ski-track-reader") . '</b> ' . esc_html($xml->Podatki->Snezne_razmere->Podlaga) . ' cm ' . esc_html($xml->Podatki->Snezne_razmere->Podlaga_opis) . '</p>';
-            $output .= '<p><b>' . __("Novozapadli:", "kiwwwi-xml-ski-track-reader") . '</b> ' . esc_html($xml->Podatki->Snezne_razmere->Novozapadli) . ' cm ' . esc_html($xml->Podatki->Snezne_razmere->Novozapadli_opis) . '</p>';
-        $output .= '</div>';
+    $output .= '<div class="ski-track-data">';
+    $output .= '<h3>Vremenske razmere</h3>';
+    if (strlen($xml->Podatki->Vremenske_razmere->Temperatura) > 1) {
+        $output .= '<p><b>Temperatura:</b> ' . htmlspecialchars($xml->Podatki->Vremenske_razmere->Temperatura) . '°C</p>';
+    }
+    if (strlen($xml->Podatki->Vremenske_razmere->Vreme) > 1) {
+        $output .= '<p><b>Vreme:</b> ' . htmlspecialchars($xml->Podatki->Vremenske_razmere->Vreme) . '</p>';
+    }
+    if (strlen($xml->Podatki->Vremenske_razmere->Padavine) > 1) {
+        $output .= '<p><b>Padavine:</b> ' . htmlspecialchars($xml->Podatki->Vremenske_razmere->Padavine) . '</p>';
+    }
+    if (strlen($xml->Podatki->Vremenske_razmere->Veter) > 1) {
+        $output .= '<p><b>Veter:</b> ' . htmlspecialchars($xml->Podatki->Vremenske_razmere->Veter) . '</p>';
+    }
+    if (strlen($xml->Podatki->Vremenske_razmere->Megla) > 1) {
+        $output .= '<p><b>Megla:</b> ' . htmlspecialchars($xml->Podatki->Vremenske_razmere->Megla) . '</p>';
+    }
+    $output .= '</div>';
 
-        // Display ski track information
-        
-        $output .= '<div class="ski-track-data-track-list">';
-        $output .= '<h3>' . __("Podatki o progah", "kiwwwi-xml-ski-track-reader") . '</h3>';
+    $output .= '<div class="ski-track-data">';
+    $output .= '<h3>Snežne razmere</h3>';
+    $output .= '<p><b>Podlaga:</b> ' . htmlspecialchars($xml->Podatki->Snezne_razmere->Podlaga) . ' cm ' . htmlspecialchars($xml->Podatki->Snezne_razmere->Podlaga_opis) . '</p>';
+    $output .= '<p><b>Novozapadli:</b> ' . htmlspecialchars($xml->Podatki->Snezne_razmere->Novozapadli) . ' cm ' . htmlspecialchars($xml->Podatki->Snezne_razmere->Novozapadli_opis) . '</p>';
+    $output .= '</div>';
 
-        foreach ($xml->Podatki->Proge->Proga as $proga) {
-            if($proga->Proga_odprta == 1){
-                $Proga_odprta = '<div class="open"></div>';
-            }else{
-                $Proga_odprta = '<div class="close"></div>';
-            }
+    // Display ski track information
 
-            $output .= '<button class="ski-track-wrapper xml-accordion">' . $Proga_odprta . esc_html($proga->Ime) ." / ". __("Oznaka:", "kiwwwi-xml-ski-track-reader") . " " . esc_html($proga->Oznaka) . " / " . __("Težavnost:", "kiwwwi-xml-ski-track-reader") . " " .esc_html($proga->Tezavnost) . ' </button>';
-                $output .= '<div class="panel">';
-                    $output .= '<div class="panel-content">';
-                      
-                        if( strlen($proga->Zacetek) > 1 && strlen($proga->Konec) > 1 ):
-                            $output .= '<p><b>'. __("Obratovalni čas:", "kiwwwi-xml-ski-track-reader") . "</b> " . esc_html($proga->Zacetek) . " - " . esc_html($proga->Konec) . '</p>';
-                        endif;
-                        if( strlen($proga->Zacetek_nocna) > 1 && strlen($proga->Konec_nocna) > 1 ):
-                            $output .= '<p><b>'. __("Obratovalni čas nočna:", "kiwwwi-xml-ski-track-reader") . "</b> " . esc_html($proga->Zacetek_nocna) . " - " . esc_html($proga->Konec_nocna) . '</p>';
-                        endif;
-                                 
-                        if($proga->Placljivost == 1){
-                            $Placljivost = __("Plačljivo", "kiwwwi-xml-ski-track-reader");
-                        }else{
-                            $Placljivost = __("Brezplačno", "kiwwwi-xml-ski-track-reader");
-                        }
+    $output .= '<div class="ski-track-data-track-list">';
+    $output .= '<h3>Podatki o progah</h3>';
 
-                        $output .= '<p><b>' . $Placljivost . '</b></p>';
-                        $output .= '<p><b>'. __("Slog:", "kiwwwi-xml-ski-track-reader") . "</b> " . esc_html($proga->Slog) . '</p>';
-                        $output .= '<p><b>'. __("Dolžina:", "kiwwwi-xml-ski-track-reader") . "</b> " . esc_html($proga->Dolzina) . 'm</p>';
-                        if( strlen($proga->Trail_link) > 1 ):
-                            $output .= '<p><a href="' . esc_html($proga->Trail_link) .'" target="_blanc">'. __("Povezava do proge", "kiwwwi-xml-ski-track-reader") . '</a></p>';
-                        endif;
-                        if( strlen($proga->Opozorilo) > 1 ):
-                            $output .= '<p><strong>' . __("Opozorilo:", "kiwwwi-xml-ski-track-reader") . '</strong> ' . esc_html($proga->Opozorilo) . '</p>';
-                        endif;
-                    $output .= '</div>';
-                $output .= '</div>';
+    foreach ($xml->Podatki->Proge->Proga as $proga) {
+        if ($proga->Proga_odprta == 1) {
+            $Proga_odprta = '<div class="open"></div>';
+        } else {
+            $Proga_odprta = '<div class="close"></div>';
         }
 
+        $output .= '<button class="ski-track-wrapper xml-accordion">' . $Proga_odprta . htmlspecialchars($proga->Ime) . " / " . "Oznaka:" . " " . htmlspecialchars($proga->Oznaka) . " / " . "Težavnost:" . " " . htmlspecialchars($proga->Tezavnost) . ' </button>';
+        $output .= '<div class="panel">';
+        $output .= '<div class="panel-content">';
+
+        if (strlen($proga->Zacetek) > 1 && strlen($proga->Konec) > 1) {
+            $output .= '<p><b>Obratovalni čas:</b> ' . htmlspecialchars($proga->Zacetek) . " - " . htmlspecialchars($proga->Konec) . '</p>';
+        }
+        if (strlen($proga->Zacetek_nocna) > 1 && strlen($proga->Konec_nocna) > 1) {
+            $output .= '<p><b>Obratovalni čas nočna:</b> ' . htmlspecialchars($proga->Zacetek_nocna) . " - " . htmlspecialchars($proga->Konec_nocna) . '</p>';
+        }
+
+        if ($proga->Placljivost == 1) {
+            $Placljivost = "Plačljivo";
+        } else {
+            $Placljivost = "Brezplačno";
+        }
+
+        $output .= '<p><b>' . $Placljivost . '</b></p>';
+        $output .= '<p><b>Slog:</b> ' . htmlspecialchars($proga->Slog) . '</p>';
+        $output .= '<p><b>Dolžina:</b> ' . htmlspecialchars($proga->Dolzina) . 'm</p>';
+        if (strlen($proga->Trail_link) > 1) {
+            $output .= '<p><a href="' . htmlspecialchars($proga->Trail_link) . '" target="_blank">Povezava do proge</a></p>';
+        }
+        if (strlen($proga->Opozorilo) > 1) {
+            $output .= '<p><strong>Opozorilo:</strong> ' . htmlspecialchars($proga->Opozorilo) . '</p>';
+        }
         $output .= '</div>';
-        $output .= '<script>
+        $output .= '</div>';
+    }
+
+    $output .= '</div>';
+    $output .= '<script>
         var acc = document.getElementsByClassName("xml-accordion");
         var i;
         
@@ -162,9 +155,14 @@
         }
         </script>';
 
-        // Close the output HTML
-        $output .= '</div>';
-        
-        // Return the content
-        return $output;
-    }
+    // Close the output HTML
+    $output .= '</div>';
+
+    // Return the content
+    return $output;
+}
+
+// Example usage
+$url = 'https://snezni-telefon.si/cm/script_xml_resort_load.php?sid=c457d8eaea35eb48318e6db818395491';
+echo ski_track_xml_display($url);
+?>
